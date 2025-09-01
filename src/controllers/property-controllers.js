@@ -96,3 +96,28 @@ export const updatePropertyById = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });  
   }
 };
+
+export const getSearchedProperties = async (req, res) => {
+  try {
+    const { searchQuery, type } = req.query;
+
+    let query = {
+      $or: [
+        { title: { $regex: searchQuery, $options: "i" } },
+        { description: { $regex: searchQuery, $options: "i" } },
+        { "location.street": { $regex: searchQuery, $options: "i" } },
+        { "location.city": { $regex: searchQuery, $options: "i" } },
+        { "location.state": { $regex: searchQuery, $options: "i" } },
+        { "location.zipcode": { $regex: searchQuery, $options: "i" } }
+      ]
+    };
+
+    if (type && type !== "All") query.type = { $regex: type, $options: "i" };
+
+    const properties = await Property.find(query);
+    res.status(200).json(properties);
+  } catch (error) {
+    console.log("Error fetching searched properties:", error.message);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
